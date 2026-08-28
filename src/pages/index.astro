@@ -1,7 +1,5 @@
----
 // src/pages/index.astro
 
-// 1. Función para obtener las secciones/publicaciones
 async function fetchSampleData() {
   return [
     { id: 1, title: "Formato de Demanda Inicial", body: "Plantilla editable para redactar una demanda inicial." },
@@ -12,75 +10,6 @@ async function fetchSampleData() {
   ];
 }
 
-// 2. Control de estado y procesamiento del formulario POST
-let messageSent = false;
-let nombreUsuario = "";
-
-if (Astro.request.method === "POST") {
-  try {
-    const formData = await Astro.request.formData();
-    const payload = {
-      nombre: formData.get("nombre") || "",
-      email: formData.get("email") || "",
-      telefono: formData.get("telefono") || "",
-      asunto: formData.get("asunto") || "",
-      mensaje: formData.get("mensaje") || ""
-    };
-
-    nombreUsuario = payload.nombre.toString();
-
-    const env = Astro.locals.runtime?.env || process.env;
-    const apiKey = env?.RESEND_API_KEY;
-    const toEmail = env?.DESTINATION_EMAIL;
-
-    if (apiKey && toEmail) {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          from: "Defensa Legal <onboarding@resend.dev>",
-          to: [toEmail],
-          subject: `Nueva solicitud: ${payload.asunto} - ${payload.nombre}`,
-          html: `
-            <h2>Nueva Solicitud de Asesoría Gratuita</h2>
-            <p><strong>Nombre:</strong> ${payload.nombre}</p>
-            <p><strong>Correo electrónico:</strong> ${payload.email}</p>
-            <p><strong>Teléfono:</strong> ${payload.telefono}</p>
-            <p><strong>Asunto:</strong> ${payload.asunto}</p>
-            <p><strong>Mensaje / Detalles:</strong></p>
-            <blockquote style="background: #f1f5f9; padding: 10px; border-left: 4px solid #38bdf8; color: #0f172a;">
-              ${payload.mensaje}
-            </blockquote>
-          `
-        })
-      });
-    }
-    messageSent = true;
-  } catch (e) {
-    console.error("Error al procesar formulario:", e);
-  }
-}
-
-// 3. Carga de datos
-const posts = await fetchSampleData();
----
-// src/pages/index.astro
-
-// 1. Obtención de datos
-async function fetchSampleData() {
-  return [
-    { id: 1, title: "Formato de Demanda Inicial", body: "Plantilla editable para redactar una demanda inicial." },
-    { id: 2, title: "Escrito de Promoción General", body: "Modelo para presentar promociones de mero trámite." },
-    { id: 3, title: "Compendio de Leyes y Códigos", body: "Acceso directo a la normatividad vigente." },
-    { id: 4, title: "Videotutoriales de Procedimiento", body: "Guías en video sobre trámites en plataformas oficiales." },
-    { id: 5, title: "Repositorio de Archivos y Anexos", body: "Documentos de apoyo y archivos multimedia." },
-  ];
-}
-
-// 2. Control de estado y procesamiento del formulario POST
 let messageSent = false;
 let nombreUsuario = "";
 
