@@ -2,8 +2,10 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async (context) => {
   try {
+    const { request, locals } = context;
+
     const formData = await request.formData();
     const nombre = formData.get('nombre')?.toString() || '';
     const email = formData.get('email')?.toString() || '';
@@ -11,13 +13,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const asunto = formData.get('asunto')?.toString() || '';
     const mensaje = formData.get('mensaje')?.toString() || '';
 
-    // Obtiene la variable de entorno configurada en Cloudflare
-    const env = (locals as any)?.runtime?.env || process.env;
+    // Intenta leer la variable desde distintos puntos de runtime de Cloudflare
+    const env = (locals as any)?.runtime?.env || (context as any).env || process.env;
     const apiKey = env?.RESEND_API_KEY;
 
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ status: 'error', message: 'Falta configurar RESEND_API_KEY en Cloudflare.' }),
+        JSON.stringify({ 
+          status: 'error', 
+          message: 'Falta configurar RESEND_API_KEY en Cloudflare.' 
+        }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -39,7 +44,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           <p><strong>Correo:</strong> ${email}</p>
           <p><strong>Teléfono / WhatsApp:</strong> ${telefono}</p>
           <p><strong>Asunto:</strong> ${asunto}</p>
-          <p><strong>Detalles del caso:</strong></p>
+          <p><strong>Detalles:</strong></p>
           <blockquote style="background: #f1f5f9; padding: 12px; border-left: 4px solid #38bdf8; color: #0f172a;">
             ${mensaje}
           </blockquote>
