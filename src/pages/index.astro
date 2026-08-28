@@ -135,8 +135,12 @@ if (Astro.request.method === "POST") {
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
     .btn-submit { background-color: var(--accent); color: var(--bg); font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
     .btn-submit:hover { background-color: var(--hover-green); }
-    .alert-success { background: #14532d; border: 1px solid #22c55e; color: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
     .alert-error { background: #7f1d1d; border: 1px solid #ef4444; color: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+
+    /* Desplazamiento fluido al presionar las anclas */
+    html {
+      scroll-behavior: smooth;
+    }
   </style>
 </head>
 <body>
