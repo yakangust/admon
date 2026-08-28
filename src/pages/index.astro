@@ -1,3 +1,4 @@
+// src/pages/index.astro
 async function fetchSampleData() {
   return [
     { id: 1, title: "Formato de Demanda Inicial", body: "Plantilla editable para redactar una demanda inicial." },
@@ -8,125 +9,99 @@ async function fetchSampleData() {
   ];
 }
 
-async function sendEmailNotification(data, env) {
-  const apiKey = env.RESEND_API_KEY;
-  const toEmail = env.DESTINATION_EMAIL;
+let messageSent = false;
+let nombreUsuario = "";
 
-  if (!apiKey || !toEmail) {
-    console.error("Faltan las variables RESEND_API_KEY o DESTINATION_EMAIL");
-    return;
-  }
-
-  const htmlContent = `
-    <h2>Nueva Solicitud de Asesoría Gratuita</h2>
-    <p><strong>Nombre:</strong> ${data.nombre}</p>
-    <p><strong>Correo electrónico:</strong> ${data.email}</p>
-    <p><strong>Teléfono:</strong> ${data.telefono}</p>
-    <p><strong>Asunto:</strong> ${data.asunto}</p>
-    <p><strong>Mensaje / Detalles:</strong></p>
-    <blockquote style="background: #f1f5f9; padding: 10px; border-left: 4px solid #38bdf8; color: #0f172a;">
-      ${data.mensaje}
-    </blockquote>
-  `;
-
+if (Astro.request.method === "POST") {
   try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: "Defensa Legal <onboarding@resend.dev>",
-        to: [toEmail],
-        subject: `Nueva solicitud: ${data.asunto} - ${data.nombre}`,
-        html: htmlContent
-      })
-    });
-  } catch (error) {
-    console.error("Error enviando email vía Resend:", error);
+    const formData = await Astro.request.formData();
+    const payload = {
+      nombre: formData.get("nombre") || "",
+      email: formData.get("email") || "",
+      telefono: formData.get("telefono") || "",
+      asunto: formData.get("asunto") || "",
+      mensaje: formData.get("mensaje") || ""
+    };
+
+    nombreUsuario = payload.nombre.toString();
+
+    const env = Astro.locals.runtime?.env || process.env;
+    const apiKey = env?.RESEND_API_KEY;
+    const toEmail = env?.DESTINATION_EMAIL;
+
+    if (apiKey && toEmail) {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          from: "Defensa Legal <onboarding@resend.dev>",
+          to: [toEmail],
+          subject: `Nueva solicitud: ${payload.asunto} - ${payload.nombre}`,
+          html: `
+            <h2>Nueva Solicitud de Asesoría Gratuita</h2>
+            <p><strong>Nombre:</strong> ${payload.nombre}</p>
+            <p><strong>Correo electrónico:</strong> ${payload.email}</p>
+            <p><strong>Teléfono:</strong> ${payload.telefono}</p>
+            <p><strong>Asunto:</strong> ${payload.asunto}</p>
+            <p><strong>Mensaje / Detalles:</strong></p>
+            <blockquote style="background: #f1f5f9; padding: 10px; border-left: 4px solid #38bdf8; color: #0f172a;">
+              ${payload.mensaje}
+            </blockquote>
+          `
+        })
+      });
+    }
+    messageSent = true;
+  } catch (e) {
+    console.error("Error al procesar formulario:", e);
   }
 }
 
-const commonStyles = `
-  :root {
-    --bg: #0f172a;
-    --card-bg: #1e293b;
-    --text: #f8fafc;
-    --accent: #38bdf8;
-    --muted: #94a3b8;
-    --input-bg: #0f172a;
-    --border: #334155;
-    --hover-green: #22c55e;
-  }
-  body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 2rem 1rem; }
-  .container { max-width: 800px; margin: 0 auto; }
-  header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
-  .header-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-  h1 { color: var(--accent); margin: 0; font-size: 1.75rem; }
-  .logo-img { width: 80px; height: 80px; object-fit: contain; border-radius: 8px; }
-  .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-  .nav-btn { background-color: var(--border); color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid #475569; transition: all 0.2s ease-in-out; cursor: pointer; }
-  .nav-btn:hover { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
-  .grid { display: grid; gap: 1.5rem; }
-  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-  .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
-  .card h2 { margin: 0.5rem 0; font-size: 1.25rem; text-transform: capitalize; }
-  .card p { color: var(--muted); line-height: 1.5; margin: 0; }
-  .form-group { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
-  label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
-  input, select, textarea { width: 100%; padding: 0.75rem; background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; box-sizing: border-box; }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
-  .btn-submit { background-color: var(--accent); color: var(--bg); font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
-  .btn-submit:hover { background-color: var(--hover-green); }
-  .alert-success { background: #14532d; border: 1px solid #22c55e; color: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
-`;
-
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-
-    if (env.ASSETS) {
-      const asset = await env.ASSETS.fetch(request);
-      if (asset.status !== 404) return asset;
-    }
-
-    if (url.pathname === "/escudo1.png") {
-      try {
-        const response = await fetch(new URL("/public/escudo1.png", request.url));
-        if (response.ok) return response;
-      } catch (e) {}
-    }
-
-    if (url.pathname === "/contacto") {
-      let messageSentHtml = "";
-
-      if (request.method === "POST") {
-        const formData = await request.formData();
-        const payload = {
-          nombre: formData.get("nombre"),
-          email: formData.get("email"),
-          telefono: formData.get("telefono"),
-          asunto: formData.get("asunto"),
-          mensaje: formData.get("mensaje")
-        };
-
-        ctx.waitUntil(sendEmailNotification(payload, env));
-
-        messageSentHtml = `
-          <div class="alert-success">
-            ¡Gracias, ${payload.nombre}! Hemos recibido tu solicitud. Nos pondremos en contacto a la brevedad.
-          </div>
-        `;
-      }
-
-      const htmlContacto = `<!DOCTYPE html>
+const posts = await fetchSampleData();
+---
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asesoría Gratuita - Defensa Legal</title>
-  <style>${commonStyles}</style>
+  <title>Defensa Legal en Modo Administrador</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --accent: #38bdf8;
+      --muted: #94a3b8;
+      --input-bg: #0f172a;
+      --border: #334155;
+      --hover-green: #22c55e;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 2rem 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    h1 { color: var(--accent); margin: 0; font-size: 1.75rem; }
+    .logo-img { width: 80px; height: 80px; object-fit: contain; border-radius: 8px; }
+    .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .nav-btn { background-color: var(--border); color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid #475569; transition: all 0.2s ease-in-out; cursor: pointer; }
+    .nav-btn:hover { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
+    .grid { display: grid; gap: 1.5rem; margin-bottom: 2.5rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+    .card h2 { margin: 0.5rem 0; font-size: 1.25rem; text-transform: capitalize; }
+    .card p { color: var(--muted); line-height: 1.5; margin: 0; }
+    .form-group { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+    input, select, textarea { width: 100%; padding: 0.75rem; background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; box-sizing: border-box; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .btn-submit { background-color: var(--accent); color: var(--bg); font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+    .btn-submit:hover { background-color: var(--hover-green); }
+    .alert-success { background: #14532d; border: 1px solid #22c55e; color: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -137,21 +112,35 @@ export default {
       </div>
       <nav class="nav-menu">
         <a href="/" class="nav-btn">Inicio</a>
-        <a href="/#formatos" class="nav-btn">Archivos</a>
-        <a href="/#escritos" class="nav-btn">Escritos</a>
-        <a href="/#leyes" class="nav-btn">Leyes</a>
-        <a href="/contacto" class="nav-btn">Asesoría Gratuita</a>
+        <a href="#archivos" class="nav-btn">Archivos</a>
+        <a href="#escritos" class="nav-btn">Escritos</a>
+        <a href="#leyes" class="nav-btn">Leyes</a>
+        <a href="#contacto" class="nav-btn">Asesoría Gratuita</a>
       </nav>
     </header>
 
     <main>
-      ${messageSentHtml}
-      <section class="card">
+      <section id="archivos" class="grid">
+        {posts.map(post => (
+          <article class="card">
+            <span class="tag">Sección #{post.id}</span>
+            <h2>{post.title}</h2>
+            <p>{post.body}</p>
+          </article>
+        ))}
+      </section>
+
+      <section id="contacto" class="card">
+        {messageSent && (
+          <div class="alert-success">
+            ¡Gracias, {nombreUsuario}! Hemos recibido tu solicitud. Nos pondremos en contacto a la brevedad.
+          </div>
+        )}
         <span class="tag">Formulario de Registro</span>
         <h2>Solicitud de Asesoría Administrativa Gratuita</h2>
         <p style="margin-bottom: 1.5rem;">Completa el formulario para evaluar tu caso administrativo sin costo.</p>
 
-        <form action="/contacto" method="POST">
+        <form action="/#contacto" method="POST">
           <div class="form-group">
             <label for="nombre">Nombre completo</label>
             <input type="text" id="nombre" name="nombre" required placeholder="Ej. Juan Pérez">
@@ -190,54 +179,4 @@ export default {
     </main>
   </div>
 </body>
-</html>`;
-
-      return new Response(htmlContacto, {
-        headers: { "content-type": "text/html;charset=UTF-8" },
-      });
-    }
-
-    const posts = await fetchSampleData();
-    const cardsHtml = posts.map(post => `
-      <article class="card">
-        <span class="tag">Sección #${post.id}</span>
-        <h2>${post.title}</h2>
-        <p>${post.body}</p>
-      </article>
-    `).join('');
-
-    const htmlIndex = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Defensa Legal en Modo Administrador</title>
-  <style>${commonStyles}</style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <div class="header-top">
-        <h1>Defensa Legal en Modo Administrador</h1>
-        <img src="/escudo1.png" alt="Logotipo Escudo" class="logo-img">
-      </div>
-      <nav class="nav-menu">
-        <a href="/" class="nav-btn">Inicio</a>
-        <a href="#formatos" class="nav-btn">Archivos</a>
-        <a href="#escritos" class="nav-btn">Escritos</a>
-        <a href="#leyes" class="nav-btn">Leyes</a>
-        <a href="/contacto" class="nav-btn">Asesoría Gratuita</a>
-      </nav>
-    </header>
-    <main class="grid">
-      ${cardsHtml}
-    </main>
-  </div>
-</body>
-</html>`;
-
-    return new Response(htmlIndex, {
-      headers: { "content-type": "text/html;charset=UTF-8" },
-    });
-  },
-};
+</html>
