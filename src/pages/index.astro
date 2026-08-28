@@ -1,67 +1,6 @@
 ---
 // src/pages/index.astro
-
-let messageSent = false;
-let nombreUsuario = "";
-let mensajeError = "";
-
-// Manejo del envío del formulario (POST)
-if (Astro.request.method === "POST") {
-  try {
-    const formData = await Astro.request.formData();
-    const payload = {
-      nombre: formData.get("nombre")?.toString() || "",
-      email: formData.get("email")?.toString() || "",
-      telefono: formData.get("telefono")?.toString() || "",
-      asunto: formData.get("asunto")?.toString() || "",
-      mensaje: formData.get("mensaje")?.toString() || ""
-    };
-
-    nombreUsuario = payload.nombre;
-
-    // Obtener variables de entorno en Astro para Cloudflare
-    const env = Astro.locals.runtime?.env || process.env;
-    const apiKey = env?.RESEND_API_KEY;
-    const toEmail = env?.DESTINATION_EMAIL;
-
-    if (apiKey && toEmail) {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          from: "Yakangustc <onboarding@resend.dev>",
-          to: [toEmail],
-          subject: `Nueva solicitud: ${payload.asunto} - ${payload.nombre}`,
-          html: `
-            <h2>Nueva Solicitud de Asesoría Gratuita</h2>
-            <p><strong>Nombre:</strong> ${payload.nombre}</p>
-            <p><strong>Correo electrónico:</strong> ${payload.email}</p>
-            <p><strong>Teléfono:</strong> ${payload.telefono}</p>
-            <p><strong>Asunto:</strong> ${payload.asunto}</p>
-            <p><strong>Mensaje / Detalles:</strong></p>
-            <blockquote style="background: #f1f5f9; padding: 10px; border-left: 4px solid #38bdf8; color: #0f172a;">
-              ${payload.mensaje}
-            </blockquote>
-          `
-        })
-      });
-
-      if (res.ok) {
-        messageSent = true;
-      } else {
-        mensajeError = "No se pudo enviar el correo. Por favor intenta más tarde.";
-      }
-    } else {
-      mensajeError = "Faltan las variables de entorno RESEND_API_KEY o DESTINATION_EMAIL.";
-    }
-  } catch (e) {
-    console.error("Error al procesar formulario:", e);
-    mensajeError = "Ocurrió un error al procesar la solicitud.";
-  }
-}
+export const prerender = true;
 ---
 
 <!DOCTYPE html>
@@ -133,11 +72,19 @@ if (Astro.request.method === "POST") {
     label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
     input, select, textarea { width: 100%; padding: 0.75rem; background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; box-sizing: border-box; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
-    .btn-submit { background-color: var(--accent); color: var(--bg); font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
-    .btn-submit:hover { background-color: var(--hover-green); }
-    .alert-error { background: #7f1d1d; border: 1px solid #ef4444; color: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+    .btn-submit { background-color: var(--accent); color: var(--bg); font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; width: 100%; }
+    .btn-submit:hover { background-color: var(--hover-green); color: #ffffff; }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Desplazamiento fluido al presionar las anclas */
+    .mensaje-estado {
+      display: none;
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-align: center;
+    }
+
     html {
       scroll-behavior: smooth;
     }
@@ -152,9 +99,6 @@ if (Astro.request.method === "POST") {
       </div>
       <nav class="nav-menu">
         <a href="/" class="nav-btn">Inicio</a>
-        <a href="#formatos" class="nav-btn">Archivos</a>
-        <a href="#escritos" class="nav-btn">Escritos</a>
-        <a href="#leyes" class="nav-btn">Leyes</a>
         <a href="#contacto" class="nav-btn">Asesoría Gratuita</a>
       </nav>
     </header>
@@ -209,26 +153,13 @@ if (Astro.request.method === "POST") {
         </video>
       </article>
 
-      <article class="card">
-      <!-- Formulario de Asesoría Gratuita integrando Resend -->
+      <!-- Formulario de Asesoría Gratuita -->
       <section id="contacto" class="card">
         <span class="tag">Asesoría Gratuita</span>
         <h2>Solicitud de Asesoría Gratuita</h2>
         <p style="margin-bottom: 1.5rem;">Completa el formulario para evaluar tu proyecto o consulta sin ningún costo.</p>
 
-        {messageSent && (
-          <div class="alert-success">
-            ¡Gracias, {nombreUsuario}! Hemos recibido tu solicitud. Nos pondremos en contacto a la brevedad.
-          </div>
-        )}
-
-        {mensajeError && (
-          <div class="alert-error">
-            {mensajeError}
-          </div>
-        )}
-
-        <form method="POST" action="#contacto">
+        <form id="form-contacto">
           <div class="form-group">
             <label for="nombre">Nombre completo</label>
             <input type="text" id="nombre" name="nombre" required placeholder="Ej. Juan Pérez">
@@ -261,7 +192,10 @@ if (Astro.request.method === "POST") {
             <textarea id="mensaje" name="mensaje" rows="5" required placeholder="Describe brevemente la situación o proyecto..."></textarea>
           </div>
 
-          <button type="submit" class="btn-submit">Enviar Solicitud</button>
+          <button type="submit" id="btn-enviar" class="btn-submit">Enviar Solicitud</button>
+
+          <!-- Alerta dinámica -->
+          <div id="mensaje-estado" class="mensaje-estado"></div>
         </form>
       </section>
 
@@ -285,5 +219,55 @@ if (Astro.request.method === "POST") {
       </article>
     </main>
   </div>
+
+  <script>
+    const form = document.getElementById('form-contacto') as HTMLFormElement;
+    const estado = document.getElementById('mensaje-estado');
+    const btn = document.getElementById('btn-enviar') as HTMLButtonElement;
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (btn) btn.disabled = true;
+      if (estado) {
+        estado.style.display = 'block';
+        estado.style.backgroundColor = '#0284c7';
+        estado.style.color = '#ffffff';
+        estado.innerHTML = '⏳ Enviando solicitud...';
+      }
+
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch('/api/contacto', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (res.ok) {
+          if (estado) {
+            estado.style.backgroundColor = '#16a34a';
+            estado.style.color = '#ffffff';
+            estado.innerHTML = '✅ ¡Solicitud enviada con éxito!';
+          }
+          form.reset();
+
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2500);
+
+        } else {
+          throw new Error('Error en la respuesta del servidor');
+        }
+      } catch (err) {
+        if (estado) {
+          estado.style.backgroundColor = '#dc2626';
+          estado.style.color = '#ffffff';
+          estado.innerHTML = '❌ Hubo un error al enviar la solicitud. Inténtalo de nuevo.';
+        }
+        if (btn) btn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
