@@ -11,17 +11,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const asunto = formData.get('asunto')?.toString() || '';
     const mensaje = formData.get('mensaje')?.toString() || '';
 
-    // Obtener las variables desde la plataforma (Cloudflare)
+    // Leer variables desde Cloudflare
     const env = (locals as any)?.runtime?.env || process.env;
-    const apiKey = env?.RESEND_API_KEY;
+    const apiKey = env?.RESEND_API_KEY || 're_ho5brDjb_5nrJknqjbxue4V6LYzxycxJJ';
     const toEmail = env?.DESTINATION_EMAIL || 'yakangust@gmail.com';
-
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Falta la API Key en las variables de entorno' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -37,7 +30,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         html: `
           <h2>Nueva Solicitud de Asesoría Gratuita</h2>
           <p><strong>Nombre:</strong> ${nombre}</p>
-          <p><strong>Correo electrónico:</strong> ${email}</p>
+          <p><strong>Correo del interesado:</strong> ${email}</p>
           <p><strong>Teléfono / WhatsApp:</strong> ${telefono}</p>
           <p><strong>Tipo de trámite:</strong> ${asunto}</p>
           <p><strong>Detalles del caso:</strong></p>
@@ -54,15 +47,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     } else {
-      const errorData = await res.text();
+      const errorText = await res.text();
+      console.error('Error Resend API:', errorText);
       return new Response(
-        JSON.stringify({ status: 'error', message: 'Error al enviar por Resend', details: errorData }),
+        JSON.stringify({ status: 'error', message: 'Error en Resend', details: errorText }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     return new Response(
-      JSON.stringify({ status: 'error', message: 'Error interno en el servidor' }),
+      JSON.stringify({ status: 'error', message: error?.message || 'Error interno' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
