@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-export const prerender = false; // Se ejecuta en el servidor (Worker)
+export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -11,12 +11,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const asunto = formData.get('asunto')?.toString() || '';
     const mensaje = formData.get('mensaje')?.toString() || '';
 
-    // Leer variables de entorno en Cloudflare Workers / Pages
+    // Obtener las variables desde la plataforma (Cloudflare)
     const env = (locals as any)?.runtime?.env || process.env;
-    const apiKey = env?.RESEND_API_KEY || 're_ho5brDjb_5nrJknqjbxue4V6LYzxycxJJ';
+    const apiKey = env?.RESEND_API_KEY;
     const toEmail = env?.DESTINATION_EMAIL || 'yakangust@gmail.com';
 
-    // Petición a la API de Resend
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ status: 'error', message: 'Falta la API Key en las variables de entorno' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
