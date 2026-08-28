@@ -30,7 +30,7 @@ async function sendEmailNotification(data, env) {
   `;
 
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -43,8 +43,13 @@ async function sendEmailNotification(data, env) {
         html: htmlContent
       })
     });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("Error al enviar mediante Resend:", errText);
+    }
   } catch (error) {
-    console.error("Error enviando email vía Resend:", error);
+    console.error("Error conectando con la API de Resend:", error);
   }
 }
 
@@ -86,16 +91,10 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // Servir imágenes y archivos estáticos (como /escudo1.png) directamente desde public/
     if (env.ASSETS) {
       const asset = await env.ASSETS.fetch(request);
       if (asset.status !== 404) return asset;
-    }
-
-    if (url.pathname === "/escudo1.png") {
-      try {
-        const response = await fetch(new URL("/public/escudo1.png", request.url));
-        if (response.ok) return response;
-      } catch (e) {}
     }
 
     if (url.pathname === "/contacto") {
@@ -104,11 +103,11 @@ export default {
       if (request.method === "POST") {
         const formData = await request.formData();
         const payload = {
-          nombre: formData.get("nombre"),
-          email: formData.get("email"),
-          telefono: formData.get("telefono"),
-          asunto: formData.get("asunto"),
-          mensaje: formData.get("mensaje")
+          nombre: formData.get("nombre") || "",
+          email: formData.get("email") || "",
+          telefono: formData.get("telefono") || "",
+          asunto: formData.get("asunto") || "",
+          mensaje: formData.get("mensaje") || ""
         };
 
         ctx.waitUntil(sendEmailNotification(payload, env));
