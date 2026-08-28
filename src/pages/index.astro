@@ -1,45 +1,38 @@
 ---
 // src/pages/index.astro
 
-async function fetchSampleData() {
-  return [
-    { id: 1, title: "Formato de Demanda Inicial", body: "Plantilla editable para redactar una demanda inicial." },
-    { id: 2, title: "Escrito de Promoción General", body: "Modelo para presentar promociones de mero trámite." },
-    { id: 3, title: "Compendio de Leyes y Códigos", body: "Acceso directo a la normatividad vigente." },
-    { id: 4, title: "Videotutoriales de Procedimiento", body: "Guías en video sobre trámites en plataformas oficiales." },
-    { id: 5, title: "Repositorio de Archivos y Anexos", body: "Documentos de apoyo y archivos multimedia." },
-  ];
-}
-
 let messageSent = false;
 let nombreUsuario = "";
+let mensajeError = "";
 
+// Manejo del envío del formulario (POST)
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
     const payload = {
-      nombre: formData.get("nombre") || "",
-      email: formData.get("email") || "",
-      telefono: formData.get("telefono") || "",
-      asunto: formData.get("asunto") || "",
-      mensaje: formData.get("mensaje") || ""
+      nombre: formData.get("nombre")?.toString() || "",
+      email: formData.get("email")?.toString() || "",
+      telefono: formData.get("telefono")?.toString() || "",
+      asunto: formData.get("asunto")?.toString() || "",
+      mensaje: formData.get("mensaje")?.toString() || ""
     };
 
-    nombreUsuario = payload.nombre.toString();
+    nombreUsuario = payload.nombre;
 
+    // Obtener variables de entorno en Astro para Cloudflare
     const env = Astro.locals.runtime?.env || process.env;
     const apiKey = env?.RESEND_API_KEY;
     const toEmail = env?.DESTINATION_EMAIL;
 
     if (apiKey && toEmail) {
-      await fetch("https://api.resend.com/emails", {
+      const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          from: "Defensa Legal <onboarding@resend.dev>",
+          from: "Yakangustc <onboarding@resend.dev>",
           to: [toEmail],
           subject: `Nueva solicitud: ${payload.asunto} - ${payload.nombre}`,
           html: `
@@ -55,158 +48,201 @@ if (Astro.request.method === "POST") {
           `
         })
       });
+
+      if (res.ok) {
+        messageSent = true;
+      } else {
+        mensajeError = "No se pudo enviar el correo. Por favor intenta más tarde.";
+      }
+    } else {
+      mensajeError = "Faltan las variables de entorno RESEND_API_KEY o DESTINATION_EMAIL.";
     }
-    messageSent = true;
   } catch (e) {
     console.error("Error al procesar formulario:", e);
+    mensajeError = "Ocurrió un error al procesar la solicitud.";
   }
 }
+---
 
-const posts = await fetchSampleData();
-async function sendEmailNotification(data, env) {
-  const apiKey = env.RESEND_API_KEY;
-  const toEmail = env.DESTINATION_EMAIL;
-
-  if (!apiKey || !toEmail) {
-    console.error("Faltan las variables RESEND_API_KEY o DESTINATION_EMAIL");
-    return;
-  }
-
-  const htmlContent = `
-    <h2>Nueva Solicitud de Asesoría Gratuita</h2>
-    <p><strong>Nombre:</strong> ${data.nombre}</p>
-    <p><strong>Correo electrónico:</strong> ${data.email}</p>
-    <p><strong>Teléfono:</strong> ${data.telefono}</p>
-    <p><strong>Asunto:</strong> ${data.asunto}</p>
-    <p><strong>Mensaje / Detalles:</strong></p>
-    <blockquote style="background: #f1f5f9; padding: 10px; border-left: 4px solid #38bdf8; color: #0f172a;">
-      ${data.mensaje}
-    </blockquote>
-  `;
-
-  try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: "Defensa Legal <onboarding@resend.dev>",
-        to: [toEmail],
-        subject: `Nueva solicitud: ${data.asunto} - ${data.nombre}`,
-        html: htmlContent
-      })
-    });
-  } catch (error) {
-    console.error("Error enviando email vía Resend:", error);
-  }
-}
-
-const commonStyles = `
-  :root {
-    --bg: #0f172a;
-    --card-bg: #1e293b;
-    --text: #f8fafc;
-    --accent: #38bdf8;
-    --muted: #94a3b8;
-    --input-bg: #0f172a;
-    --border: #334155;
-    --hover-green: #22c55e;
-  }
-  body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 2rem 1rem; }
-  .container { max-width: 800px; margin: 0 auto; }
-  header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
-  .header-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-  h1 { color: var(--accent); margin: 0; font-size: 1.75rem; }
-  .logo-img { width: 80px; height: 80px; object-fit: contain; border-radius: 8px; }
-  .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-  .nav-btn { background-color: var(--border); color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid #475569; transition: all 0.2s ease-in-out; cursor: pointer; }
-  .nav-btn:hover { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
-  .grid { display: grid; gap: 1.5rem; }
-  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-  .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
-  .card h2 { margin: 0.5rem 0; font-size: 1.25rem; text-transform: capitalize; }
-  .card p { color: var(--muted); line-height: 1.5; margin: 0; }
-  .form-group { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
-  label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
-  input, select, textarea { width: 100%; padding: 0.75rem; background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; box-sizing: border-box; }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
-  .btn-submit { background-color: var(--accent); color: var(--bg); font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
-  .btn-submit:hover { background-color: var(--hover-green); }
-  .alert-success { background: #14532d; border: 1px solid #22c55e; color: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
-`;
-
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-
-    if (env.ASSETS) {
-      const asset = await env.ASSETS.fetch(request);
-      if (asset.status !== 404) return asset;
-    }
-
-    if (url.pathname === "/escudo1.png") {
-      try {
-        const response = await fetch(new URL("/public/escudo1.png", request.url));
-        if (response.ok) return response;
-      } catch (e) {}
-    }
-
-    if (url.pathname === "/contacto") {
-      let messageSentHtml = "";
-
-      if (request.method === "POST") {
-        const formData = await request.formData();
-        const payload = {
-          nombre: formData.get("nombre"),
-          email: formData.get("email"),
-          telefono: formData.get("telefono"),
-          asunto: formData.get("asunto"),
-          mensaje: formData.get("mensaje")
-        };
-
-        ctx.waitUntil(sendEmailNotification(payload, env));
-
-        messageSentHtml = `
-          <div class="alert-success">
-            ¡Gracias, ${payload.nombre}! Hemos recibido tu solicitud. Nos pondremos en contacto a la brevedad.
-          </div>
-        `;
-      }
-
-      const htmlContacto = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asesoría Gratuita - Defensa Legal</title>
-  <style>${commonStyles}</style>
+  <title>Yakangustc S.A.S - Inicio</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
+
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --accent: #38bdf8;
+      --muted: #94a3b8;
+      --input-bg: #0f172a;
+      --border: #334155;
+      --hover-green: #22c55e;
+    }
+    body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 2rem 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    
+    .gothic-title {
+      font-family: 'Lobster', cursive, sans-serif;
+      color: var(--accent);
+      margin: 0;
+      font-size: 3rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+
+    .logo-img { width: 240px; height: auto; object-fit: contain; border-radius: 8px; display: block; }
+    .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .nav-btn { background-color: var(--border); color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid #475569; transition: all 0.2s ease-in-out; cursor: pointer; }
+    .nav-btn:hover { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
+    .grid { display: grid; gap: 1.5rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    .card-header-title { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0 1rem 0; flex-wrap: wrap; }
+    .card-header-title h2 { margin: 0; font-size: 1.25rem; text-transform: capitalize; }
+    
+    .title-link { display: inline-flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%; border: 2px solid transparent; transition: all 0.25s ease-in-out; text-decoration: none; }
+    .title-link-icon { width: 28px; height: 28px; object-fit: contain; display: block; border-radius: 50%; }
+    .title-link:hover {
+      border-color: var(--hover-green);
+      box-shadow: 0 0 12px var(--hover-green);
+      transform: translateY(-2px);
+    }
+
+    .card p { color: var(--muted); line-height: 1.5; margin: 0; }
+    .card-video { width: 100%; max-height: 420px; border-radius: 8px; background-color: #000; margin-top: 0.5rem; outline: none; border: 1px solid var(--border); }
+    
+    .social-container { display: flex; gap: 1.25rem; align-items: center; margin-top: 1rem; }
+    .social-link { display: inline-block; border-radius: 50%; padding: 4px; transition: all 0.25s ease-in-out; border: 2px solid transparent; }
+    .social-icon { width: 48px; height: 48px; object-fit: contain; display: block; border-radius: 50%; }
+    .social-link:hover {
+      border-color: var(--hover-green);
+      box-shadow: 0 0 12px var(--hover-green);
+      transform: translateY(-2px);
+    }
+
+    .form-group { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+    input, select, textarea { width: 100%; padding: 0.75rem; background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; box-sizing: border-box; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .btn-submit { background-color: var(--accent); color: var(--bg); font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+    .btn-submit:hover { background-color: var(--hover-green); }
+    .alert-success { background: #14532d; border: 1px solid #22c55e; color: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+    .alert-error { background: #7f1d1d; border: 1px solid #ef4444; color: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+  </style>
 </head>
 <body>
   <div class="container">
     <header>
       <div class="header-top">
-        <h1>Defensa Legal en Modo Administrador</h1>
-        <img src="/escudo1.png" alt="Logotipo Escudo" class="logo-img">
+        <h1 class="gothic-title">Yakangustc S.A.S</h1>
+        <img src="/logo.png" alt="Logotipo Yakangust" class="logo-img">
       </div>
       <nav class="nav-menu">
         <a href="/" class="nav-btn">Inicio</a>
-        <a href="/#formatos" class="nav-btn">Archivos</a>
-        <a href="/#escritos" class="nav-btn">Escritos</a>
-        <a href="/#leyes" class="nav-btn">Leyes</a>
-        <a href="/contacto" class="nav-btn">Asesoría Gratuita</a>
+        <a href="#formatos" class="nav-btn">Archivos</a>
+        <a href="#escritos" class="nav-btn">Escritos</a>
+        <a href="#leyes" class="nav-btn">Leyes</a>
+        <a href="#contacto" class="nav-btn">Asesoría Gratuita</a>
       </nav>
     </header>
 
-    <main>
-      ${messageSentHtml}
-      <section class="card">
-        <span class="tag">Formulario de Registro</span>
-        <h2>Solicitud de Asesoría Administrativa Gratuita</h2>
-        <p style="margin-bottom: 1.5rem;">Completa el formulario para evaluar tu caso administrativo sin costo.</p>
+    <main class="grid">
+      <!-- Tarjetas de Video -->
+      <article class="card">
+        <span class="tag">Plan de negocios</span>
+        <div class="card-header-title">
+          <h2>Asesoría gratuita para la creación de tu plan de negocios</h2>
+          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
+        </div>
+        <video class="card-video" controls preload="metadata">
+          <source src="/plan.mp4" type="video/mp4">
+          Tu navegador no soporta la reproducción de video HTML5.
+        </video>
+      </article>
 
-        <form action="/contacto" method="POST">
+      <article class="card">
+        <span class="tag">Apertura tu empresa gratis</span>
+        <div class="card-header-title">
+          <h2>Asesoría gratuita para la apertura de tu propia empresa</h2>
+          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
+        </div>
+        <video class="card-video" controls preload="metadata">
+          <source src="/empresa.mp4" type="video/mp4">
+          Tu navegador no soporta la reproducción de video HTML5.
+        </video>
+      </article>
+
+      <article class="card">
+        <span class="tag">Cumple con tus obligaciones Fiscales</span>
+        <div class="card-header-title">
+          <h2>Asesoría gratuita para dar cumplimiento con tus obligaciones Fiscales</h2>
+          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
+        </div>
+        <video class="card-video" controls preload="metadata">
+          <source src="/obligaciones.mp4" type="video/mp4">
+          Tu navegador no soporta la reproducción de video HTML5.
+        </video>
+      </article>
+
+      <article class="card">
+        <span class="tag">Crea tu manual de procedimientos</span>
+        <div class="card-header-title">
+          <h2>Asesoria Gratuita para la Creación de Manuales de procedimientos</h2>
+          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
+        </div>
+        <video class="card-video" controls preload="metadata">
+          <source src="/manuales.mp4" type="video/mp4">
+          Tu navegador no soporta la reproducción de video HTML5.
+        </video>
+      </article>
+
+      <!-- Secciones de Contenido -->
+      <section id="formatos" class="card">
+        <span class="tag">Archivos</span>
+        <h2>Archivos y Formatos Descargables</h2>
+        <p>En esta sección encontrarás las plantillas y formatos editables necesarios para tu empresa o proyecto.</p>
+      </section>
+
+      <section id="escritos" class="card">
+        <span class="tag">Escritos</span>
+        <h2>Escritos y Modelos</h2>
+        <p>Modelos de promociones y redacciones estándar para trámites ante dependencias.</p>
+      </section>
+
+      <section id="leyes" class="card">
+        <span class="tag">Leyes</span>
+        <h2>Normatividad y Marco Legal</h2>
+        <p>Compendio de leyes, reglamentos y código fiscal aplicable a las Sociedades por Acciones Simplificadas.</p>
+      </section>
+
+      <!-- Formulario de Asesoría Gratuita integrando Resend -->
+      <section id="contacto" class="card">
+        <span class="tag">Asesoría Gratuita</span>
+        <h2>Solicitud de Asesoría Gratuita</h2>
+        <p style="margin-bottom: 1.5rem;">Completa el formulario para evaluar tu proyecto o consulta sin ningún costo.</p>
+
+        {messageSent && (
+          <div class="alert-success">
+            ¡Gracias, {nombreUsuario}! Hemos recibido tu solicitud. Nos pondremos en contacto a la brevedad.
+          </div>
+        )}
+
+        {mensajeError && (
+          <div class="alert-error">
+            {mensajeError}
+          </div>
+        )}
+
+        <form method="POST" action="#contacto">
           <div class="form-group">
             <label for="nombre">Nombre completo</label>
             <input type="text" id="nombre" name="nombre" required placeholder="Ej. Juan Pérez">
@@ -226,103 +262,42 @@ export default {
             <label for="asunto">Tipo de trámite o asunto</label>
             <select id="asunto" name="asunto" required>
               <option value="">Selecciona una opción</option>
-              <option value="Recurso de Inconformidad">Recurso de Inconformidad</option>
-              <option value="Procedimiento Sancionador">Procedimiento Sancionador</option>
-              <option value="Licencias y Permisos">Licencias y Permisos</option>
-              <option value="Juicio Nulidad">Juicio de Nulidad</option>
-              <option value="Otro">Otro asunto administrativo</option>
+              <option value="Plan de Negocios">Plan de Negocios</option>
+              <option value="Apertura de Empresa">Apertura de Empresa (S.A.S)</option>
+              <option value="Obligaciones Fiscales">Obligaciones Fiscales</option>
+              <option value="Manuales de Procedimientos">Manuales de Procedimientos</option>
+              <option value="Otro">Otro asunto</option>
             </select>
           </div>
 
           <div class="form-group">
             <label for="mensaje">Detalles del caso</label>
-            <textarea id="mensaje" name="mensaje" rows="5" required placeholder="Describe brevemente la situación o acto administrativo..."></textarea>
+            <textarea id="mensaje" name="mensaje" rows="5" required placeholder="Describe brevemente la situación o proyecto..."></textarea>
           </div>
 
           <button type="submit" class="btn-submit">Enviar Solicitud</button>
         </form>
       </section>
+
+      <!-- Redes Sociales -->
+      <article class="card">
+        <span class="tag">Redes Sociales</span>
+        <div class="card-header-title">
+          <h2>Ponte en contacto con nosotros</h2>
+        </div>
+        <div class="social-container">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook">
+            <img src="/facebook.png" alt="Facebook" class="social-icon">
+          </a>
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram">
+            <img src="/instagram.png" alt="Instagram" class="social-icon">
+          </a>
+          <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" class="social-link" title="TikTok">
+            <img src="/tiktok.svg" alt="TikTok" class="social-icon">
+          </a>
+        </div>
+      </article>
     </main>
   </div>
 </body>
-</html>`;
-
-      return new Response(htmlContacto, {
-        headers: { "content-type": "text/html;charset=UTF-8" },
-      });
-    }
-
-    const posts = await fetchSampleData();
-    const cardsHtml = posts.map(post => `
-      <article class="card">
-        <span class="tag">Sección #${post.id}</span>
-        <h2>${post.title}</h2>
-        <p>${post.body}</p>
-      </article>
-    `).join('');
-
-    const htmlIndex =
----
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Yakangustc S.A.S</title><style>
-  @import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
-
-  :root {
-    --bg: #0f172a;
-    --card-bg: #1e293b;
-    --text: #f8fafc;
-    --accent: #38bdf8;
-    --muted: #94a3b8;
-    --input-bg: #0f172a;
-    --border: #334155;
-    --hover-green: #22c55e;
-  }
-  body { font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 2rem 1rem; }
-  .container { max-width: 800px; margin: 0 auto; }
-  header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
-  .header-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-  
-  /* Estilo con fuente Lobster para Yakangustc S.A.S */
-  .gothic-title {
-    font-family: 'Lobster', cursive, sans-serif;
-    color: var(--accent);
-    margin: 0;
-    font-size: 3rem;
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    line-height: 1.1;
-  }
-
-  .logo-img { width: 240px; height: auto; object-fit: contain; border-radius: 8px; display: block; }
-  .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-  .nav-btn { background-color: var(--border); color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid #475569; transition: all 0.2s ease-in-out; cursor: pointer; }
-  .nav-btn:hover { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
-  .grid { display: grid; gap: 1.5rem; }
-  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-  .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
-  
-  /* Alineación del título y el ícono de enlace */
-  .card-header-title { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0 1rem 0; flex-wrap: wrap; }
-  .card-header-title h2 { margin: 0; font-size: 1.25rem; text-transform: capitalize; }
-  
-  /* Estilo del botón enlace.svg en los títulos */
-  .title-link { display: inline-flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%; border: 2px solid transparent; transition: all 0.25s ease-in-out; text-decoration: none; }
-  .title-link-icon { width: 28px; height: 28px; object-fit: contain; display: block; border-radius: 50%; }
-  .title-link:hover {
-    border-color: var(--hover-green);
-    box-shadow: 0 0 12px var(--hover-green);
-    transform: translateY(-2px);
-  }
-
-  .card p { color: var(--muted); line-height: 1.5; margin: 0; }
-  .card-video { width: 100%; max-height: 420px; border-radius: 8px; background-color: #000; margin-top: 0.5rem; outline: none; border: 1px solid var(--border); }
-  
-  /* Estilos para los íconos de redes sociales */
-  .social-container { display: flex; gap: 1.25rem; align-items: center; margin-top: 1rem; }
-  .social-link { display: inline-block; border-radius: 50%; padding: 4px; transition: all 0.25s ease-in-out; border: 2px solid transparent; }
-  .social-icon { width: 48px; height: 48px; object-fit: contain; display: block; border-radius: 50%; }
-  .social-link:hover {
-    border-color: var(--hover-green);
-    box-shadow: 0 0 12px var(--hover-green);
-    transform: translateY(-2px);
-  }
-</style></head><body><div class="container"><header><div class="header-top"><h1 class="gothic-title">Yakangustc S.A.S</h1><img src="/logo.png" alt="Logotipo Yakangust" class="logo-img"></div><nav class="nav-menu"><a href="/" class="nav-btn">Inicio</a><a href="#formatos" class="nav-btn">Archivos</a><a href="#escritos" class="nav-btn">Escritos</a><a href="#leyes" class="nav-btn">Leyes</a><a href="/contacto" class="nav-btn">Asesoría Gratuita</a></nav></header><main class="grid"><article class="card"><span class="tag">Plan de negocios</span><div class="card-header-title"><h2>Asesoría gratuita para la creación de tu plan de negocios</h2><a href="/contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a></div><video class="card-video" controls preload="metadata"><source src="/plan.mp4" type="video/mp4">Tu navegador no soporta la reproducción de video HTML5.</video></article><article class="card"><span class="tag">Apertura tu empresa gratis</span><div class="card-header-title"><h2>Asesoría gratuita para la apertura de tu propia empresa</h2><a href="/contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a></div><video class="card-video" controls preload="metadata"><source src="/empresa.mp4" type="video/mp4">Tu navegador no soporta la reproducción de video HTML5.</video></article><article class="card"><span class="tag">Cumple con tus obligaciones Fiscales</span><div class="card-header-title"><h2>Asesoría gratuita para dar cumplimiento con tus obligaciones Fiscales</h2><a href="/contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a></div><video class="card-video" controls preload="metadata"><source src="/obligaciones.mp4" type="video/mp4">Tu navegador no soporta la reproducción de video HTML5.</video></article><article class="card"><span class="tag">Crea tu manual de procedimientos</span><div class="card-header-title"><h2>Asesoria Gratuita para la Creación de Manuales de procedimientos</h2><a href="/contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a></div><video class="card-video" controls preload="metadata"><source src="/manuales.mp4" type="video/mp4">Tu navegador no soporta la reproducción de video HTML5.</video></article><article class="card"><span class="tag">Redes Sociales</span><div class="card-header-title"><h2>Ponte en contacto con nosotros</h2></div><div class="social-container"><a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-link" title="Facebook"><img src="/facebook.png" alt="Facebook" class="social-icon"></a><a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram"><img src="/instagram.png" alt="Instagram" class="social-icon"></a><a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" class="social-link" title="TikTok"><img src="/tiktok.svg" alt="TikTok" class="social-icon"></a></div></article></main></div></body></html>
+</html>
