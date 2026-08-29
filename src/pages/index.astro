@@ -1,4 +1,3 @@
----
 // src/pages/index.astro
 export const prerender = false;
 ---
@@ -38,7 +37,7 @@ export const prerender = false;
     }
 
     .logo-img { width: 240px; height: auto; object-fit: contain; border-radius: 8px; display: block; }
-    .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; align-items: center; }
     .nav-btn { background-color: var(--border); color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid #475569; transition: all 0.2s ease-in-out; cursor: pointer; }
     .nav-btn:hover { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
     .grid { display: grid; gap: 1.5rem; }
@@ -49,7 +48,7 @@ export const prerender = false;
     .card-header-title h2 { margin: 0; font-size: 1.25rem; text-transform: capitalize; }
     
     .title-link { display: inline-flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%; border: 2px solid transparent; transition: all 0.25s ease-in-out; text-decoration: none; }
-    .title-link-icon { width: 28px; height: 28px; object-fit: contain; display: block; border-radius: 50%; }
+    .title-link-icon { width: 32px; height: 32px; object-fit: contain; display: block; border-radius: 50%; }
     .title-link:hover {
       border-color: var(--hover-green);
       box-shadow: 0 0 12px var(--hover-green);
@@ -59,31 +58,7 @@ export const prerender = false;
     .card p { color: var(--muted); line-height: 1.5; margin: 0; }
     .card-video { width: 100%; max-height: 420px; border-radius: 8px; background-color: #000; margin-top: 0.5rem; outline: none; border: 1px solid var(--border); }
     
-    .social-container { display: flex; gap: 1.25rem; align-items: center; margin-top: 1rem; }
-    .social-link { display: inline-block; border-radius: 50%; padding: 4px; transition: all 0.25s ease-in-out; border: 2px solid transparent; }
-    .social-icon { width: 48px; height: 48px; object-fit: contain; display: block; border-radius: 50%; }
-    .social-link:hover {
-      border-color: var(--hover-green);
-      box-shadow: 0 0 12px var(--hover-green);
-      transform: translateY(-2px);
-    }
-
-    .form-group { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
-    label { font-size: 0.875rem; font-weight: 600; color: var(--text); }
-    input, select, textarea { width: 100%; padding: 0.75rem; background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; box-sizing: border-box; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
-    .btn-submit { background-color: var(--accent); color: var(--bg); font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; width: 100%; }
-    .btn-submit:hover { background-color: var(--hover-green); color: #ffffff; }
-    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .mensaje-estado {
-      display: none;
-      margin-top: 15px;
-      padding: 12px;
-      border-radius: 6px;
-      font-weight: bold;
-      text-align: center;
-    }
+    .social-container { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
 
     html {
       scroll-behavior: smooth;
@@ -155,15 +130,23 @@ export const prerender = false;
           Tu navegador no soporta la reproducción de video HTML5.
         </video>
       </article>
-      </div>
-      <div class="card-header-title">
-          <h2>Visita Nuestras Redes Sociales</h2>
-      <br>
-      <nav class="nav-menu">
-        <a href="#contacto" class="itle-link-icon"><img src="/facebook.png"
-        <a href="#contacto" class="itle-link-icon"><img src="/instagram.png"
-        <a href="#contacto" class="itle-link-icon"><img src="/tiktok.svg"
-      </nav>
-</script>
+
+      <!-- Sección de Redes Sociales -->
+      <article class="card">
+        <h2>Visita Nuestras Redes Sociales</h2>
+        <nav class="social-container">
+          <a href="#contacto" class="title-link" title="Facebook">
+            <img src="/facebook.png" alt="Facebook" class="title-link-icon">
+          </a>
+          <a href="#contacto" class="title-link" title="Instagram">
+            <img src="/instagram.png" alt="Instagram" class="title-link-icon">
+          </a>
+          <a href="#contacto" class="title-link" title="TikTok">
+            <img src="/tiktok.svg" alt="TikTok" class="title-link-icon">
+          </a>
+        </nav>
+      </article>
+    </main>
+  </div>
 </body>
 </html>
