@@ -1,5 +1,5 @@
 ---
-// src/pages/index.astro
+// src/pages/tramites.astro
 export const prerender = false;
 ---
 
@@ -8,7 +8,7 @@ export const prerender = false;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yakangustc S.A.S - Inicio</title>
+  <title>Yakangustc S.A.S - Trámites</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
 
@@ -57,8 +57,19 @@ export const prerender = false;
     }
 
     .card p { color: var(--muted); line-height: 1.5; margin: 0; }
-    .card-video { width: 100%; max-height: 420px; border-radius: 8px; background-color: #000; margin-top: 0.5rem; outline: none; border: 1px solid var(--border); }
     
+    .tramite-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 1.25rem;
+      font-weight: 600;
+      transition: color 0.2s ease-in-out;
+    }
+    .tramite-link:hover {
+      color: var(--hover-green);
+      text-decoration: underline;
+    }
+
     .social-container { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
 
     html {
@@ -83,53 +94,22 @@ export const prerender = false;
     </header>
 
     <main class="grid">
-      <!-- Tarjetas de Video -->
+      <!-- Primer Trámite -->
       <article class="card">
-        <span class="tag">Plan de negocios</span>
+        <span class="tag">Estado de México</span>
         <div class="card-header-title">
-          <h2>Asesoría gratuita para la creación de tu plan de negocios</h2>
-          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
+          <h2>
+            <a href="/tramites/permiso-alcohol-edomex" class="tramite-link">
+              Permisos para la venta de alcohol en el Estado de México
+            </a>
+          </h2>
+          <a href="/tramites/permiso-alcohol-edomex" class="title-link" title="Ver detalles del trámite">
+            <img src="/enlace.svg" alt="Enlace Trámite" class="title-link-icon">
+          </a>
         </div>
-        <video class="card-video" controls preload="metadata">
-          <source src="/plan.mp4" type="video/mp4">
-          Tu navegador no soporta la reproducción de video HTML5.
-        </video>
-      </article>
-
-      <article class="card">
-        <span class="tag">Apertura tu empresa gratis</span>
-        <div class="card-header-title">
-          <h2>Asesoría gratuita para la apertura de tu propia empresa</h2>
-          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
-        </div>
-        <video class="card-video" controls preload="metadata">
-          <source src="/empresa.mp4" type="video/mp4">
-          Tu navegador no soporta la reproducción de video HTML5.
-        </video>
-      </article>
-
-      <article class="card">
-        <span class="tag">Cumple con tus obligaciones Fiscales</span>
-        <div class="card-header-title">
-          <h2>Asesoría gratuita para dar cumplimiento con tus obligaciones Fiscales</h2>
-          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
-        </div>
-        <video class="card-video" controls preload="metadata">
-          <source src="/obligaciones.mp4" type="video/mp4">
-          Tu navegador no soporta la reproducción de video HTML5.
-        </video>
-      </article>
-
-      <article class="card">
-        <span class="tag">Crea tu manual de procedimientos</span>
-        <div class="card-header-title">
-          <h2>Asesoria Gratuita para la Creación de Manuales de procedimientos</h2>
-          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
-        </div>
-        <video class="card-video" controls preload="metadata">
-          <source src="/manuales.mp4" type="video/mp4">
-          Tu navegador no soporta la reproducción de video HTML5.
-        </video>
+        <p>
+          Guía completa sobre los requisitos, licencias de uso de suelo, Dictamen Único de Factibilidad (DUAG) y normativas para la venta de bebidas alcohólicas en envase cerrado en el Edomex.
+        </p>
       </article>
 
       <!-- Sección de Redes Sociales -->
