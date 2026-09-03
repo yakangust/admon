@@ -40,7 +40,7 @@ export const prerender = false;
     .logo-img { width: 240px; height: auto; object-fit: contain; border-radius: 8px; display: block; }
     .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; align-items: center; }
     .nav-btn { background-color: var(--border); color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid #475569; transition: all 0.2s ease-in-out; cursor: pointer; }
-    .nav-btn:hover { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
+    .nav-btn:hover, .nav-btn.active { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
     .grid { display: grid; gap: 1.5rem; }
     .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -86,15 +86,15 @@ export const prerender = false;
       </div>
       <nav class="nav-menu">
         <a href="/" class="nav-btn">Inicio</a>
-        <a href="/tramites" class="nav-btn">Tramites</a>
-        <a href="/" class="nav-btn">Formacion</a>
+        <a href="/tramites" class="nav-btn active">Tramites</a>
+        <a href="/formacion" class="nav-btn">Formacion</a>
         <a href="/descargas" class="nav-btn">Descargas</a>
         <a href="https://astro-blog-starter-template.yakangust.workers.dev/contacto" class="nav-btn">Asesoría Gratuita</a>
       </nav>
     </header>
 
     <main class="grid">
-      <!-- Primer Trámite -->
+      <!-- Trámite 1: Alcohol Edomex -->
       <article class="card">
         <span class="tag">Estado de México</span>
         <div class="card-header-title">
@@ -109,6 +109,42 @@ export const prerender = false;
         </div>
         <p>
           Guía completa sobre los requisitos, licencias de uso de suelo, Dictamen Único de Factibilidad (DUAG) y normativas para la venta de bebidas alcohólicas en envase cerrado en el Edomex.
+        </p>
+      </article>
+
+      <!-- Trámite 2: Certificados SAT -->
+      <article class="card">
+        <span class="tag">Trámites Fiscales SAT</span>
+        <div class="card-header-title">
+          <h2>
+            <a href="/tramites/certificados-sat" class="tramite-link">
+              Tramitación, Renovación y Revocación de Certificados del SAT (e.firma y CSD)
+            </a>
+          </h2>
+          <a href="/tramites/certificados-sat" class="title-link" title="Ver detalles del trámite">
+            <img src="/enlace.svg" alt="Enlace Trámite" class="title-link-icon">
+          </a>
+        </div>
+        <p>
+          Proceso paso a paso para la obtención, renovación en línea/presencial y revocación de e.firma y Certificados de Sello Digital (CSD) mediante la plataforma CertiSAT Web y Certifica.
+        </p>
+      </article>
+
+      <!-- Trámite 3: Asesoría Fiscal -->
+      <article class="card">
+        <span class="tag">Servicios Profesionales</span>
+        <div class="card-header-title">
+          <h2>
+            <a href="https://astro-blog-starter-template.yakangust.workers.dev/contacto" class="tramite-link">
+              Asesoría Fiscal Integral para Personas Físicas y Morales
+            </a>
+          </h2>
+          <a href="https://astro-blog-starter-template.yakangust.workers.dev/contacto" class="title-link" title="Solicitar Asesoría Fiscal">
+            <img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon">
+          </a>
+        </div>
+        <p>
+          Atención personalizada para el cumplimiento de obligaciones fiscales, regularización ante el SAT, planeación de contribuciones, presentación de declaraciones y optimización impositiva.
         </p>
       </article>
 
