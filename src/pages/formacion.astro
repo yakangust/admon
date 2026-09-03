@@ -1,5 +1,5 @@
 ---
-// src/pages/index.astro
+// src/pages/formacion.astro
 export const prerender = false;
 ---
 
@@ -8,7 +8,7 @@ export const prerender = false;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yakangustc S.A.S - Inicio</title>
+  <title>Yakangustc S.A.S - Formación Académica</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
 
@@ -40,14 +40,82 @@ export const prerender = false;
     .logo-img { width: 240px; height: auto; object-fit: contain; border-radius: 8px; display: block; }
     .nav-menu { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; align-items: center; }
     .nav-btn { background-color: var(--border); color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid #475569; transition: all 0.2s ease-in-out; cursor: pointer; }
-    .nav-btn:hover { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
+    .nav-btn:hover, .nav-btn.active { background-color: var(--hover-green); color: var(--bg); border-color: var(--hover-green); }
     .grid { display: grid; gap: 1.5rem; }
     .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
     
-    .card-header-title { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0 1rem 0; flex-wrap: wrap; }
-    .card-header-title h2 { margin: 0; font-size: 1.25rem; text-transform: capitalize; }
-    
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (min-width: 600px) {
+      .profile-header {
+        flex-direction: row;
+        text-align: left;
+      }
+    }
+
+    .profile-img {
+      width: 160px;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    }
+
+    .profile-info h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.75rem;
+      color: var(--text);
+    }
+
+    .profile-info p {
+      color: var(--accent);
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    .timeline-item {
+      border-left: 3px solid var(--accent);
+      padding-left: 1rem;
+    }
+
+    .timeline-item h3 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    .timeline-item .institution {
+      font-size: 0.875rem;
+      color: var(--hover-green);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .timeline-item p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .social-container { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
     .title-link { display: inline-flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%; border: 2px solid transparent; transition: all 0.25s ease-in-out; text-decoration: none; }
     .title-link-icon { width: 32px; height: 32px; object-fit: contain; display: block; border-radius: 50%; }
     .title-link:hover {
@@ -55,11 +123,6 @@ export const prerender = false;
       box-shadow: 0 0 12px var(--hover-green);
       transform: translateY(-2px);
     }
-
-    .card p { color: var(--muted); line-height: 1.5; margin: 0; }
-    .card-video { width: 100%; max-height: 420px; border-radius: 8px; background-color: #000; margin-top: 0.5rem; outline: none; border: 1px solid var(--border); }
-    
-    .social-container { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
 
     html {
       scroll-behavior: smooth;
@@ -76,60 +139,49 @@ export const prerender = false;
       <nav class="nav-menu">
         <a href="/" class="nav-btn">Inicio</a>
         <a href="/tramites" class="nav-btn">Tramites</a>
-        <a href="/formacion" class="nav-btn">Formacion</a>
+        <a href="/formacion" class="nav-btn active">Formacion</a>
         <a href="/descargas" class="nav-btn">Descargas</a>
         <a href="https://astro-blog-starter-template.yakangust.workers.dev/contacto" class="nav-btn">Asesoría Gratuita</a>
       </nav>
     </header>
 
     <main class="grid">
-      <!-- Tarjetas de Video -->
+      <!-- Tarjeta de Perfil Profesional -->
       <article class="card">
-        <span class="tag">Plan de negocios</span>
-        <div class="card-header-title">
-          <h2>Asesoría gratuita para la creación de tu plan de negocios</h2>
-          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
+        <span class="tag">Perfil Profesional</span>
+        <div class="profile-header" style="margin-top: 1rem;">
+          <img src="/perfil.jpg" alt="Arturo Galeno Hernández" class="profile-img">
+          <div class="profile-info">
+            <h2>Arturo Galeno Hernández</h2>
+            <p>Especialista en Administración y Contribuciones Fiscales</p>
+          </div>
         </div>
-        <video class="card-video" controls preload="metadata">
-          <source src="/plan.mp4" type="video/mp4">
-          Tu navegador no soporta la reproducción de video HTML5.
-        </video>
       </article>
 
+      <!-- Tarjeta de Trayectoria Académica -->
       <article class="card">
-        <span class="tag">Apertura tu empresa gratis</span>
-        <div class="card-header-title">
-          <h2>Asesoría gratuita para la apertura de tu propia empresa</h2>
-          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
-        </div>
-        <video class="card-video" controls preload="metadata">
-          <source src="/empresa.mp4" type="video/mp4">
-          Tu navegador no soporta la reproducción de video HTML5.
-        </video>
-      </article>
+        <span class="tag">Trayectoria Académica</span>
+        <h2 style="margin: 0.5rem 0 1.25rem 0; font-size: 1.25rem;">Grados y Certificaciones</h2>
+        
+        <div class="timeline">
+          <div class="timeline-item">
+            <h3>Maestría en Administración de las Contribuciones</h3>
+            <span class="institution">Universidad Nacional Autónoma de México (UNAM)</span>
+            <p>Especialización de posgrado enfocada en el análisis, gestión y cumplimiento estratégico de las obligaciones fiscales e impuestos.</p>
+          </div>
 
-      <article class="card">
-        <span class="tag">Cumple con tus obligaciones Fiscales</span>
-        <div class="card-header-title">
-          <h2>Asesoría gratuita para dar cumplimiento con tus obligaciones Fiscales</h2>
-          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
-        </div>
-        <video class="card-video" controls preload="metadata">
-          <source src="/obligaciones.mp4" type="video/mp4">
-          Tu navegador no soporta la reproducción de video HTML5.
-        </video>
-      </article>
+          <div class="timeline-item">
+            <h3>Diplomado en Administración Estratégica de Recursos Humanos</h3>
+            <span class="institution">Universidad Nacional Autónoma de México (UNAM)</span>
+            <p>Formación especializada en gestión del talento, planeación organizacional y optimización de capital humano.</p>
+          </div>
 
-      <article class="card">
-        <span class="tag">Crea tu manual de procedimientos</span>
-        <div class="card-header-title">
-          <h2>Asesoria Gratuita para la Creación de Manuales de procedimientos</h2>
-          <a href="#contacto" class="title-link" title="Solicitar Asesoría"><img src="/enlace.svg" alt="Enlace Asesoría" class="title-link-icon"></a>
+          <div class="timeline-item">
+            <h3>Licenciatura en Administración</h3>
+            <span class="institution">Universidad Nacional Autónoma de México (UNAM)</span>
+            <p>Formación universitaria integral en dirección empresarial, finanzas, procesos administrativos y desarrollo de proyectos.</p>
+          </div>
         </div>
-        <video class="card-video" controls preload="metadata">
-          <source src="/manuales.mp4" type="video/mp4">
-          Tu navegador no soporta la reproducción de video HTML5.
-        </video>
       </article>
 
       <!-- Sección de Redes Sociales -->
